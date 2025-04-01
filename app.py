@@ -20,6 +20,10 @@ UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
+def landing():
+    return render_template('landing.html')
+
+@app.route('/home')
 def index():
     if 'image_path' in session:
         try:
@@ -29,6 +33,7 @@ def index():
             print(f"Error deleting old image: {e}")
         session.pop('image_path', None)
     return render_template('index.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

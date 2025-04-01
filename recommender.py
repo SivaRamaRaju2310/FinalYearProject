@@ -3,16 +3,20 @@ import random
 
 # Load datasets with encoding fix
 games_df = pd.read_csv("datasets/games.csv", encoding="ISO-8859-1")
-songs_df = pd.read_csv("datasets/songs1.csv", encoding="ISO-8859-1")
-quotes_df = pd.read_csv("datasets/quotes1.csv", encoding="ISO-8859-1")
+songs_df = pd.read_csv("datasets/songs.csv", encoding="ISO-8859-1")
+quotes_df = pd.read_csv("datasets/quotes.csv", encoding="ISO-8859-1")
 
 # Standardize column names
 games_df.columns = games_df.columns.str.replace('ï»¿', '').str.strip()
 songs_df.columns = songs_df.columns.str.replace('ï»¿', '').str.strip()
 quotes_df.columns = quotes_df.columns.str.replace('ï»¿', '').str.strip()
 
-# Drop unnecessary unnamed columns from songs dataset
-songs_df = songs_df.loc[:, ~songs_df.columns.str.contains('Unnamed')]
+# Rename columns to match function expectations
+games_df.rename(columns={"Game link": "Online Play Link"}, inplace=True)
+songs_df.rename(columns={"Category": "Emotion"}, inplace=True)
+
+# Drop unnecessary columns
+games_df = games_df.loc[:, ~games_df.columns.str.contains('Unnamed')]
 
 def get_recommendations(emotion):
     recommendations = {"games": [], "songs": [], "quotes": []}
@@ -26,8 +30,8 @@ def get_recommendations(emotion):
             recommendations["games"] = random.sample(game_list.to_dict(orient="records"), min(len(game_list), 4)) if not game_list.empty else []
 
         # Get unique Songs (4 max)
-        if "Category" in songs_df.columns and "Song Name" in songs_df.columns and "Song Link" in songs_df.columns:
-            song_list = songs_df[songs_df["Category"].str.lower().str.strip() == emotion][["Song Name", "Song Link"]].drop_duplicates()
+        if "Emotion" in songs_df.columns and "Song Name" in songs_df.columns and "Song Link" in songs_df.columns:
+            song_list = songs_df[songs_df["Emotion"].str.lower().str.strip() == emotion][["Song Name", "Song Link"]].drop_duplicates()
             recommendations["songs"] = random.sample(song_list.to_dict(orient="records"), min(len(song_list), 4)) if not song_list.empty else []
 
         # Get unique Quotes (2 max)
