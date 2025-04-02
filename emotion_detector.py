@@ -3,7 +3,7 @@ import cv2
 
 detector = FER(mtcnn=True)
 
-def detect_emotion(image_path):
+def detect_emotion(image_path: str) -> str | None:
     img = cv2.imread(image_path)
     if img is None:
         return None  # Image not found
