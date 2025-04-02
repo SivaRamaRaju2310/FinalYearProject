@@ -1,5 +1,8 @@
-from fer import FER
+import os
 import cv2
+from fer import FER
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1" 
 
 detector = FER(mtcnn=True)
 
