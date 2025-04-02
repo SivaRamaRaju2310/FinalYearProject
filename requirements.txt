@@ -10,3 +10,4 @@ fer
 tensorflow
 mtcnn
 Werkzeug
+moviepy
