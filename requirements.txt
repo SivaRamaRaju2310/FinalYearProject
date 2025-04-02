@@ -1,0 +1,9 @@
+Flask
+flask-pymongo
+opencv-python
+pandas
+numpy
+fer
+tensorflow
+mtcnn
+Werkzeug
