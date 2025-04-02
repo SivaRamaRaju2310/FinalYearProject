@@ -1,5 +1,6 @@
 Flask
 flask-pymongo
+moviepy
 pymongo
 gunicorn
 dnspython
@@ -10,4 +11,4 @@ fer
 tensorflow
 mtcnn
 Werkzeug
-moviepy
+
