@@ -4,7 +4,7 @@ from fer import FER
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1" 
 
-detector = FER(mtcnn=True)
+detector = FER(mtcnn=False)
 
 def detect_emotion(image_path: str) -> str | None:
     img = cv2.imread(image_path)
