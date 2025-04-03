@@ -13,29 +13,42 @@ document.addEventListener("DOMContentLoaded", function () {
     // Start Camera Function
     async function startCamera() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("Your browser does not support webcam access. Please use a modern browser.");
+            alert("❌ Your browser does not support webcam access. Please use Chrome or Edge.");
             return;
         }
-
+    
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Allow camera access on both HTTP and HTTPS (localhost and remote)
+            const constraints = { video: true };
+    
+            if (window.location.protocol === "http:") {
+                console.warn("⚠️ Running on HTTP – some browsers might block camera access.");
+            }
+    
+            stream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = stream;
             video.classList.remove("hidden");
             placeholder.classList.add("hidden");
             captureButton.classList.remove("hidden");
+    
         } catch (error) {
             console.error("Camera access error:", error);
+    
+            let errorMsg = "Unknown error.";
             if (error.name === "NotAllowedError") {
-                alert("Camera access denied. Please allow access and reload.");
+                errorMsg = "❌ Camera access was denied. Please allow camera permissions.";
             } else if (error.name === "NotFoundError") {
-                alert("No camera detected. Please connect a webcam.");
-            } else if (window.location.protocol !== "https:") {
-                alert("Camera access requires HTTPS. Please use a secure connection.");
+                errorMsg = "❌ No camera found. Please connect a webcam.";
+            } else if (window.location.protocol !== "https:" && !window.location.hostname.includes("localhost")) {
+                errorMsg = "⚠️ Camera access may be blocked on HTTP. Please try using HTTPS.";
             } else {
-                alert("Error accessing camera: " + error.message);
+                errorMsg = `❌ Error accessing camera: ${error.message}`;
             }
+    
+            alert(errorMsg);
         }
     }
+    
 
     // Stop Camera Function
     function stopCamera() {
