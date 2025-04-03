@@ -19,6 +19,15 @@ auth_collection = mongo.db.auth  # Collection for authentication
 UPLOAD_FOLDER = 'static/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+# Helper Function to Resize Image
+def resize_image(image_path):
+    try:
+        img = cv2.imread(image_path)
+        img = cv2.resize(img, (300, 300))  # Resize to 300x300 to reduce memory
+        cv2.imwrite(image_path, img)
+    except Exception as e:
+        print(f"Error resizing image: {e}")
+
 @app.route('/')
 def landing():
     return render_template('landing.html')
@@ -33,7 +42,6 @@ def index():
             print(f"Error deleting old image: {e}")
         session.pop('image_path', None)
     return render_template('index.html')
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -78,7 +86,14 @@ def logout():
 
 @app.route('/detect_emotion', methods=['POST'])
 def detect():
-    if 'image' not in request.files:
+    print("Request received at /detect_emotion")
+    
+    # Debugging: Log request data
+    print("Request headers:", request.headers)
+    print("Request files:", request.files)
+
+    if 'image' not in request.files or request.files['image'].filename == '':
+        print("No image found in request")
         return jsonify({'error': 'No image uploaded'}), 400
 
     image = request.files['image']
@@ -86,6 +101,7 @@ def detect():
     image_path = os.path.join(UPLOAD_FOLDER, f'captured_{timestamp}.jpg')
 
     image.save(image_path)
+    resize_image(image_path)  # Reduce image size
     session['image_path'] = image_path  
 
     emotion = detect_emotion(image_path)
@@ -97,17 +113,15 @@ def detect():
     recommendations = get_recommendations(emotion)
     response = jsonify({'emotion': emotion, 'recommendations': recommendations, 'image_url': image_path})
 
+    # Delete the image after response
     try:
         os.remove(image_path)
         session.pop('image_path', None)
-        print(f"Deleted processed image: {image_path}")
     except Exception as e:
         print(f"Error deleting processed image: {e}")
 
     return response
 
-
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))  # Default to 10000
+    port = int(os.environ.get("PORT", 8080))  # Default to 8080
     app.run(host="0.0.0.0", port=port, debug=True)
-
