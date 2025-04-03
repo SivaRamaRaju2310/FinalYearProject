@@ -3,26 +3,41 @@ document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     const captureButton = document.getElementById("capture");
+    const startCameraButton = document.getElementById("start-camera");
     const capturedImage = document.getElementById("captured-image");
     const resultsDiv = document.getElementById("results");
     const placeholder = document.getElementById("placeholder");
 
     let stream = null;
 
-    // Start Camera
+    // Start Camera Function
     async function startCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Your browser does not support webcam access. Please use a modern browser.");
+            return;
+        }
+
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
             video.classList.remove("hidden");
-            capturedImage.classList.add("hidden");
             placeholder.classList.add("hidden");
+            captureButton.classList.remove("hidden");
         } catch (error) {
-            alert("Error accessing camera: " + error);
+            console.error("Camera access error:", error);
+            if (error.name === "NotAllowedError") {
+                alert("Camera access denied. Please allow access and reload.");
+            } else if (error.name === "NotFoundError") {
+                alert("No camera detected. Please connect a webcam.");
+            } else if (window.location.protocol !== "https:") {
+                alert("Camera access requires HTTPS. Please use a secure connection.");
+            } else {
+                alert("Error accessing camera: " + error.message);
+            }
         }
     }
 
-    // Stop Camera
+    // Stop Camera Function
     function stopCamera() {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -30,20 +45,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Reset the canvas and previous image
-    function resetCapture() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        capturedImage.src = "";
-        capturedImage.classList.add("hidden");
-        video.classList.remove("hidden");
-    }
-
     // Generate small recommendation cards with GIFs
     function generateRecommendationCards(data, type) {
         let gif = "";
         if (type === "game") gif = "/static/games.gif";
         else if (type === "music") gif = "/static/songs.gif";
-    
+
         return data.map(item => `
             <div class="bg-white rounded-lg shadow-md p-3 flex items-center space-x-3 w-48 hover:scale-105 transition-transform">
                 ${gif ? `<img src="${gif}" class="w-12 h-12 rounded-lg object-cover" alt="${type} gif">` : ""}
@@ -55,7 +62,6 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         `).join('');
     }
-    
 
     // Capture and Detect Emotion
     captureButton.addEventListener("click", async () => {
@@ -63,8 +69,6 @@ document.addEventListener("DOMContentLoaded", function () {
             await startCamera();
             return;
         }
-
-        resetCapture(); // Ensure a fresh capture each time
 
         // Capture Frame
         canvas.width = video.videoWidth;
@@ -119,4 +123,7 @@ document.addEventListener("DOMContentLoaded", function () {
             stopCamera();
         }, "image/jpeg");
     });
+
+    // Event Listener for Start Camera Button
+    startCameraButton.addEventListener("click", startCamera);
 });
