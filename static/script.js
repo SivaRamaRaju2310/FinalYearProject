@@ -12,6 +12,28 @@ document.addEventListener("DOMContentLoaded", function () {
     // Start Camera
     async function startCamera() {
         try {
+            // Check if mediaDevices is available, otherwise polyfill it
+            if (!navigator.mediaDevices) {
+                navigator.mediaDevices = {};
+            }
+            
+            // Some browsers don't implement the mediaDevices at all
+            if (!navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia = function(constraints) {
+                    // First get the legacy APIs
+                    const getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                    
+                    if (!getUserMedia) {
+                        return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                    }
+                    
+                    // Wrap the call to the old navigator.getUserMedia with a Promise
+                    return new Promise(function(resolve, reject) {
+                        getUserMedia.call(navigator, constraints, resolve, reject);
+                    });
+                }
+            }
+            
             stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
             video.classList.remove("hidden");
@@ -22,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Rest of your existing code remains exactly the same...
     // Stop Camera
     function stopCamera() {
         if (stream) {
