@@ -3,54 +3,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const canvas = document.getElementById("canvas");
     const context = canvas.getContext("2d");
     const captureButton = document.getElementById("capture");
-    const startCameraButton = document.getElementById("start-camera");
     const capturedImage = document.getElementById("captured-image");
     const resultsDiv = document.getElementById("results");
     const placeholder = document.getElementById("placeholder");
 
     let stream = null;
 
-    // Start Camera Function
+    // Start Camera
     async function startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert("❌ Your browser does not support webcam access. Please use Chrome or Edge.");
-            return;
-        }
-    
         try {
-            // Allow camera access on both HTTP and HTTPS (localhost and remote)
-            const constraints = { video: true };
-    
-            if (window.location.protocol === "http:") {
-                console.warn("⚠️ Running on HTTP – some browsers might block camera access.");
-            }
-    
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = stream;
             video.classList.remove("hidden");
+            capturedImage.classList.add("hidden");
             placeholder.classList.add("hidden");
-            captureButton.classList.remove("hidden");
-    
         } catch (error) {
-            console.error("Camera access error:", error);
-    
-            let errorMsg = "Unknown error.";
-            if (error.name === "NotAllowedError") {
-                errorMsg = "❌ Camera access was denied. Please allow camera permissions.";
-            } else if (error.name === "NotFoundError") {
-                errorMsg = "❌ No camera found. Please connect a webcam.";
-            } else if (window.location.protocol !== "https:" && !window.location.hostname.includes("localhost")) {
-                errorMsg = "⚠️ Camera access may be blocked on HTTP. Please try using HTTPS.";
-            } else {
-                errorMsg = `❌ Error accessing camera: ${error.message}`;
-            }
-    
-            alert(errorMsg);
+            alert("Error accessing camera: " + error);
         }
     }
-    
 
-    // Stop Camera Function
+    // Stop Camera
     function stopCamera() {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
@@ -58,12 +30,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Reset the canvas and previous image
+    function resetCapture() {
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        capturedImage.src = "";
+        capturedImage.classList.add("hidden");
+        video.classList.remove("hidden");
+    }
+
     // Generate small recommendation cards with GIFs
     function generateRecommendationCards(data, type) {
         let gif = "";
         if (type === "game") gif = "/static/games.gif";
         else if (type === "music") gif = "/static/songs.gif";
-
+    
         return data.map(item => `
             <div class="bg-white rounded-lg shadow-md p-3 flex items-center space-x-3 w-48 hover:scale-105 transition-transform">
                 ${gif ? `<img src="${gif}" class="w-12 h-12 rounded-lg object-cover" alt="${type} gif">` : ""}
@@ -75,6 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         `).join('');
     }
+    
 
     // Capture and Detect Emotion
     captureButton.addEventListener("click", async () => {
@@ -82,6 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
             await startCamera();
             return;
         }
+
+        resetCapture(); // Ensure a fresh capture each time
 
         // Capture Frame
         canvas.width = video.videoWidth;
@@ -136,7 +119,4 @@ document.addEventListener("DOMContentLoaded", function () {
             stopCamera();
         }, "image/jpeg");
     });
-
-    // Event Listener for Start Camera Button
-    startCameraButton.addEventListener("click", startCamera);
 });
